@@ -11,20 +11,20 @@
  */
 
 /** Display name shown in headers, onboarding, and the landing page. */
-export const APP_NAME = 'MyApp'
+export const APP_NAME = 'PawPal'
 
 /** URL scheme matching expo.scheme in app.json — used for OAuth deep link callbacks. */
-export const APP_SCHEME = 'myapp'
+export const APP_SCHEME = 'pawpal'
 
 /** Support email shown on the Support screen. */
-export const APP_SUPPORT_EMAIL = 'support@example.com'
+export const APP_SUPPORT_EMAIL = 'chubuilds@gmail.com'
 
 /** Documentation URL shown on the Support screen. */
-export const APP_DOCS_URL = 'https://example.com/docs'
+export const APP_DOCS_URL = 'https://github.com/Chu-Builds/ai-virtual-pet'
 
 /** One-liner shown on the landing page below the app name. */
-export const APP_TAGLINE = 'Your next great idea starts here.'
+export const APP_TAGLINE = 'Your AI pet companion, always with you.'
 
 /** Short description used in marketing / onboarding contexts. */
 export const APP_DESCRIPTION =
-  'A production-ready mobile app template with auth, subscriptions, analytics, and polished UI — ready from day one.'
+  'Adopt, raise, and co-parent your very own AI virtual pet.'

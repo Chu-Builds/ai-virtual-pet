@@ -4,6 +4,7 @@ dist/
 web-build/
 .env.local
 .env.*.local
+.env
 *.orig.*
 ios/
 android/

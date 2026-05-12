@@ -9,7 +9,7 @@ import TextInputField from '@/components/ui/TextInputField';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/contexts/ToastContext';
 
-export default function LoginScreen() {
+export default function SignInScreen() {
     const insets = useSafeAreaInsets();
     const { showToast } = useToast();
 

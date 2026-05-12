@@ -1,10 +1,11 @@
 {
   "expo": {
-    "name": "MyApp",
-    "slug": "my-app",
+    "name": "PawPal",
+    "slug": "pawpal",
+    "description": "Your AI pet companion, always with you.",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "myapp",
+    "scheme": "pawpal",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "splash": {
@@ -41,7 +42,7 @@
           "action": "VIEW",
           "autoVerify": true,
           "data": [
-            { "scheme": "myapp" }
+            { "scheme": "pawpal" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

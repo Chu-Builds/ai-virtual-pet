@@ -7,7 +7,7 @@
  * the screens registered here.
  */
 import { Tabs } from 'expo-router'
-import { House, Compass, Bell, CircleUser } from 'lucide-react-native'
+import { Ionicons } from '@expo/vector-icons'
 import TabBar, { TAB_BAR_HEIGHT } from '@/components/TabBar'
 import { BG } from '@/lib/theme'
 
@@ -27,7 +27,7 @@ export default function TabsLayout() {
         options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
-            <House size={size} color={color} strokeWidth={1.6} />
+            <Ionicons name="home-outline" size={size} color={color} />
           ),
         }}
       />
@@ -35,9 +35,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          tabBarLabel: 'Explore',
+          tabBarLabel: 'Journal',
           tabBarIcon: ({ color, size }) => (
-            <Compass size={size} color={color} strokeWidth={1.6} />
+            <Ionicons name="book-outline" size={size} color={color} />
           ),
         }}
       />
@@ -45,9 +45,9 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="activity"
         options={{
-          tabBarLabel: 'Activity',
+          tabBarLabel: 'Stats',
           tabBarIcon: ({ color, size }) => (
-            <Bell size={size} color={color} strokeWidth={1.6} />
+            <Ionicons name="bar-chart-outline" size={size} color={color} />
           ),
         }}
       />
@@ -57,7 +57,7 @@ export default function TabsLayout() {
         options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <CircleUser size={size} color={color} strokeWidth={1.6} />
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />

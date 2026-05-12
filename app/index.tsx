@@ -24,9 +24,9 @@ const { width: SW, height: SH } = Dimensions.get('window')
 // ─── Feature items shown on the landing page ──────────────────────────────────
 // Update these to match your app's value props.
 const FEATURES = [
-    { icon: 'shield-checkmark-outline' as const, title: 'Secure by Default', desc: 'End-to-end encrypted auth' },
-    { icon: 'flash-outline' as const, title: 'Blazing Fast', desc: 'Optimized for performance' },
-    { icon: 'cloud-done-outline' as const, title: 'Always in Sync', desc: 'Real-time data across devices' },
+    { icon: 'paw-outline' as const, title: 'Adopt a pet', desc: '🐱 Adopt a cat, dog, or bunny' },
+    { icon: 'bulb-outline' as const, title: 'Smart AI', desc: '🧠 AI personality that grows with you' },
+    { icon: 'people-outline' as const, title: 'Co-Parent', desc: '👫 Co-parent your pet with a friend' },
 ]
 
 export default function LandingScreen() {

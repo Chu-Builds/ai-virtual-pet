@@ -1,187 +1,204 @@
-import { useMemo, useState, useEffect } from 'react'
-import { View, ScrollView, StyleSheet, Pressable } from 'react-native'
+import { useEffect, useState } from 'react'
+import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native'
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
 import { Text } from '@/components/ui/Text'
 import { Card } from '@/components/ui/Card'
-import {
-    ACCENT,
-    BG,
-    BORDER,
-    TEXT_PRIMARY,
-    TEXT_SECONDARY,
-    TEXT_TERTIARY,
-} from '@/lib/theme'
+import { useActivePet } from '@/hooks/usePet'
+import { BG, TEXT_SECONDARY, TEXT_TERTIARY, ACCENT, BORDER } from '@/lib/theme'
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar'
-import { useNotifications } from '@/hooks/useNotifications'
-import type { NotificationItem } from '@/lib/mockData'
 
-type TabType = 'all' | 'unread'
-
-export default function ActivityScreen() {
-    const insets = useSafeAreaInsets()
-    const [activeTab, setActiveTab] = useState<TabType>('all')
-    const { data: remoteItems = [] } = useNotifications()
-    const [items, setItems] = useState<NotificationItem[]>(remoteItems)
-
-    // Sync local state when remote data arrives
-    useEffect(() => {
-        if (remoteItems.length > 0) setItems(remoteItems)
-    }, [remoteItems])
-
-    const visibleItems = useMemo(() => {
-        if (activeTab === 'all') return items
-        return items.filter((item) => !item.read)
-    }, [activeTab, items])
-
-    const unreadCount = useMemo(() => items.filter((item) => !item.read).length, [items])
-
-    const markAllRead = () => {
-        setItems((prev) => prev.map((item) => ({ ...item, read: true })))
-    }
-
-    const toggleRead = (id: string) => {
-        setItems((prev) => prev.map((item) => item.id === id ? { ...item, read: !item.read } : item))
-    }
-
-    return (
-        <ScrollView
-            style={{ flex: 1, backgroundColor: BG }}
-            contentContainerStyle={[s.container, { paddingTop: insets.top + 16, paddingBottom: TAB_BAR_CLEARANCE + 16 }]}
-            showsVerticalScrollIndicator={false}
-        >
-            <View style={s.header}>
-                <View>
-                    <Text style={s.title}>Activity</Text>
-                    <Text style={s.subtitle}>Product updates, team events, and billing alerts.</Text>
-                </View>
-
-                <Pressable onPress={markAllRead} style={({ pressed }) => [s.markAllBtn, pressed && { opacity: 0.75 }]}
-                >
-                    <Text style={s.markAllText}>Mark all read</Text>
-                </Pressable>
-            </View>
-
-            <View style={s.segmentRow}>
-                <Pressable
-                    onPress={() => setActiveTab('all')}
-                    style={[s.segmentItem, activeTab === 'all' && s.segmentItemActive]}
-                >
-                    <Text style={[s.segmentText, activeTab === 'all' && s.segmentTextActive]}>All ({items.length})</Text>
-                </Pressable>
-                <Pressable
-                    onPress={() => setActiveTab('unread')}
-                    style={[s.segmentItem, activeTab === 'unread' && s.segmentItemActive]}
-                >
-                    <Text style={[s.segmentText, activeTab === 'unread' && s.segmentTextActive]}>Unread ({unreadCount})</Text>
-                </Pressable>
-            </View>
-
-            {visibleItems.length === 0 ? (
-                <Card style={s.emptyCard}>
-                    <Text style={s.emptyTitle}>You are all caught up</Text>
-                    <Text style={s.emptySub}>New alerts and updates will appear here.</Text>
-                </Card>
-            ) : (
-                <Card style={s.listCard}>
-                    {visibleItems.map((item, index) => (
-                        <Pressable
-                            key={item.id}
-                            onPress={() => toggleRead(item.id)}
-                            style={[s.row, index < visibleItems.length - 1 && s.rowDivider]}
-                        >
-                            <View style={[s.iconWrap, item.read && s.iconWrapMuted]}>
-                                <Ionicons name={categoryIcon(item.category)} size={14} color={item.read ? TEXT_SECONDARY : ACCENT} />
-                            </View>
-
-                            <View style={{ flex: 1 }}>
-                                <Text style={[s.rowTitle, item.read && s.rowTitleMuted]}>{item.title}</Text>
-                                <Text style={s.rowBody}>{item.body}</Text>
-                                <Text style={s.rowTime}>{item.timeAgo}</Text>
-                            </View>
-
-                            {!item.read && <View style={s.unreadDot} />}
-                        </Pressable>
-                    ))}
-                </Card>
-            )}
-        </ScrollView>
-    )
+function daysSince(iso: string): number {
+  const createdAt = new Date(iso)
+  const today = new Date()
+  const diffTime = Math.abs(today.getTime() - createdAt.getTime())
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
 }
 
-function categoryIcon(category: 'billing' | 'system' | 'product' | 'team') {
-    switch (category) {
-        case 'billing':
-            return 'wallet-outline'
-        case 'system':
-            return 'server-outline'
-        case 'product':
-            return 'sparkles-outline'
-        case 'team':
-            return 'people-outline'
-        default:
-            return 'ellipse-outline'
-    }
+function growthProgress(stage: number, interactions: number): { label: string; progress: number; next: number } {
+  if (stage === 1) return { label: 'Baby', progress: Math.min(interactions / 20, 1), next: 20 }
+  if (stage === 2) return { label: 'Teen', progress: Math.min((interactions - 20) / 30, 1), next: 50 }
+  return { label: 'Adult', progress: 1, next: 50 }
+}
+
+function StatBar({ label, value, color }: { label: string; value: number; color: string }) {
+  const progress = useSharedValue(0)
+
+  useEffect(() => {
+    progress.value = withTiming(value, { duration: 1000, easing: Easing.out(Easing.cubic) })
+  }, [value])
+
+  const animatedStyle = useAnimatedStyle(() => ({ width: progress.value + '%' }))
+
+  return (
+    <View style={s.statRow}>
+      <View style={s.statHeader}>
+        <Text style={s.statLabel}>{label}</Text>
+        <Text style={s.statValue}>{value}</Text>
+      </View>
+      <View style={s.statTrack}>
+        <Animated.View style={[s.statFill, { backgroundColor: color }, animatedStyle]} />
+      </View>
+    </View>
+  )
+}
+
+export default function StatsScreen() {
+  const insets = useSafeAreaInsets()
+  const { data: pet, isLoading } = useActivePet()
+
+  if (isLoading) {
+    return (
+      <View style={[s.center, { backgroundColor: BG }]}>
+        <ActivityIndicator color={ACCENT} />
+      </View>
+    )
+  }
+
+  if (!pet) {
+    return (
+      <View style={[s.center, { backgroundColor: BG, paddingHorizontal: 20 }]}>
+        <Card style={s.emptyCard}>
+          <Text style={{ fontSize: 48 }}>📊</Text>
+          <Text style={s.emptyTitle}>Adopt a pet to see your stats</Text>
+        </Card>
+      </View>
+    )
+  }
+
+  const days = daysSince(pet.created_at)
+  const growth = growthProgress(pet.growth_stage, pet.interaction_count)
+
+  return (
+    <View style={{ flex: 1, backgroundColor: BG }}>
+      <ScrollView
+        contentContainerStyle={[
+          s.container,
+          { paddingTop: insets.top + 20, paddingBottom: TAB_BAR_CLEARANCE + 16 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={s.screenTitle}>Stats 📊</Text>
+
+        {/* Stat cards grid */}
+        <View style={s.grid}>
+          <Card style={s.statCard}>
+            <Text style={s.statCardEmoji}>🐾</Text>
+            <Text style={s.statCardValue}>{pet.interaction_count}</Text>
+            <Text style={s.statCardLabel}>Total Interactions</Text>
+          </Card>
+          <Card style={s.statCard}>
+            <Text style={s.statCardEmoji}>📅</Text>
+            <Text style={s.statCardValue}>{days === 0 ? 'Today' : days}</Text>
+            <Text style={s.statCardLabel}>Days Together</Text>
+          </Card>
+        </View>
+
+        {/* Growth stage */}
+        <Card style={s.growthCard}>
+          <View style={s.growthHeader}>
+            <Text style={s.cardLabel}>🌱 Growth Stage</Text>
+            <Text style={s.growthStageText}>{growth.label}</Text>
+          </View>
+          {pet.growth_stage < 3 ? (
+            <>
+              <View style={s.growthTrack}>
+                <Animated.View
+                  style={[
+                    s.growthFill,
+                    { width: (growth.progress * 100) + '%' },
+                  ]}
+                />
+              </View>
+              <Text style={s.growthHint}>
+                {pet.interaction_count} / {growth.next} interactions to next stage
+              </Text>
+            </>
+          ) : (
+            <Text style={s.growthHint}>Fully grown! ⭐</Text>
+          )}
+        </Card>
+
+        {/* Co-parent */}
+        <Card style={s.coparentCard}>
+          <Text style={s.cardLabel}>💕 Co-Parent</Text>
+          <Text style={s.coparentText}>
+            {pet.coparent_id ? 'Co-parenting with a friend 👫' : 'Solo parenting'}
+          </Text>
+        </Card>
+
+        {/* Live stat bars */}
+        <Text style={s.sectionHeader}>Current Stats</Text>
+        <Card style={s.barsCard}>
+          <StatBar label="Energy" value={pet.energy} color="#3b82f6" />
+          <StatBar label="Affection" value={pet.affection} color="#ec4899" />
+          <StatBar label="Fullness" value={pet.hunger} color="#f97316" />
+        </Card>
+      </ScrollView>
+    </View>
+  )
 }
 
 const s = StyleSheet.create({
-    container: { paddingHorizontal: 20, gap: 12 },
-    header: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' },
-    title: { fontSize: 24, fontWeight: '800', color: TEXT_PRIMARY, letterSpacing: -0.5 },
-    subtitle: { marginTop: 3, fontSize: 13, color: TEXT_SECONDARY },
-    markAllBtn: {
-        borderWidth: 1,
-        borderColor: BORDER,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        paddingHorizontal: 10,
-        paddingVertical: 7,
-        borderRadius: 9,
-    },
-    markAllText: { fontSize: 12, color: TEXT_PRIMARY, fontWeight: '600' },
-    segmentRow: {
-        flexDirection: 'row',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderWidth: 1,
-        borderColor: BORDER,
-        borderRadius: 11,
-        padding: 3,
-    },
-    segmentItem: {
-        flex: 1,
-        borderRadius: 8,
-        alignItems: 'center',
-        paddingVertical: 7,
-    },
-    segmentItemActive: {
-        backgroundColor: 'rgba(255,255,255,0.14)',
-    },
-    segmentText: { fontSize: 12, color: TEXT_SECONDARY, fontWeight: '600' },
-    segmentTextActive: { color: TEXT_PRIMARY },
-    emptyCard: { alignItems: 'center', gap: 5, paddingVertical: 26 },
-    emptyTitle: { fontSize: 15, color: TEXT_PRIMARY, fontWeight: '700' },
-    emptySub: { fontSize: 13, color: TEXT_SECONDARY },
-    listCard: { paddingVertical: 2, paddingHorizontal: 0 },
-    row: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 12, paddingVertical: 11 },
-    rowDivider: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: BORDER },
-    iconWrap: {
-        width: 28,
-        height: 28,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 1,
-        backgroundColor: 'rgba(255,255,255,0.10)',
-    },
-    iconWrapMuted: { backgroundColor: 'rgba(255,255,255,0.05)' },
-    rowTitle: { fontSize: 13.5, color: TEXT_PRIMARY, fontWeight: '700' },
-    rowTitleMuted: { color: TEXT_SECONDARY },
-    rowBody: { marginTop: 1, fontSize: 12.5, lineHeight: 18, color: TEXT_SECONDARY },
-    rowTime: { marginTop: 5, fontSize: 11, color: TEXT_TERTIARY },
-    unreadDot: {
-        width: 7,
-        height: 7,
-        borderRadius: 999,
-        marginTop: 6,
-        backgroundColor: ACCENT,
-    },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: { paddingHorizontal: 20, gap: 12 },
+  screenTitle: { fontSize: 28, fontWeight: '800', color: '#fff', marginBottom: 4 },
+
+  emptyCard: { alignItems: 'center', paddingVertical: 32, gap: 12 },
+  emptyTitle: { fontSize: 15, color: TEXT_SECONDARY, textAlign: 'center' },
+
+  // Grid of small stat cards
+  grid: { flexDirection: 'row', gap: 12 },
+  statCard: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 20 },
+  statCardEmoji: { fontSize: 28 },
+  statCardValue: { fontSize: 28, fontWeight: '800', color: '#fff' },
+  statCardLabel: { fontSize: 12, color: TEXT_SECONDARY, textAlign: 'center' },
+
+  // Growth card
+  growthCard: { gap: 10 },
+  growthHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  growthStageText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  growthTrack: {
+    height: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  growthFill: {
+    height: '100%',
+    borderRadius: 4,
+    backgroundColor: ACCENT,
+  },
+  growthHint: { fontSize: 12, color: TEXT_TERTIARY },
+
+  // Co-parent card
+  coparentCard: { gap: 6 },
+  coparentText: { fontSize: 15, color: '#fff', fontWeight: '600' },
+
+  // Bars card
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: TEXT_TERTIARY,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 8,
+    marginBottom: -4,
+  },
+  barsCard: { gap: 16 },
+  statRow: { gap: 6 },
+  statHeader: { flexDirection: 'row', justifyContent: 'space-between' },
+  statLabel: { fontSize: 13, fontWeight: '600', color: TEXT_SECONDARY },
+  statValue: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  statTrack: { height: 8, backgroundColor: BORDER, borderRadius: 4, overflow: 'hidden' },
+  statFill: { height: '100%', borderRadius: 4 },
+
+  cardLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: TEXT_TERTIARY,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
 })

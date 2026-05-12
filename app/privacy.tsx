@@ -22,36 +22,27 @@ export default function PrivacyScreen() {
                 contentContainerStyle={[s.body, { paddingBottom: insets.bottom + 32 }]}
                 showsVerticalScrollIndicator={false}
             >
-                <Text style={s.updated}>Last updated: {new Date().toLocaleDateString()}</Text>
+                <Text style={s.updated}>Last updated: May 2026</Text>
 
-                <Text style={s.heading}>Overview</Text>
                 <Text style={s.paragraph}>
-                    This template application is provided for demonstration purposes. Data shown across the app can be mock data,
-                    sample analytics, or developer-provided environment values.
+                    PawPal is built and maintained by Chu Builds (chubuilds@gmail.com).
                 </Text>
 
-                <Text style={s.heading}>Data We May Process</Text>
+                <Text style={s.heading}>Data we collect:</Text>
                 <Text style={s.paragraph}>
-                    Depending on how you configure this template, your production app may process account identifiers,
-                    product usage events, subscription status, and support inquiries.
+                    - Email address (used for account creation only){'\n'}
+                    - Pet interaction data (stored in your account to power the AI personality){'\n'}
+                    - We do not sell your data to third parties
                 </Text>
 
-                <Text style={s.heading}>How Data Is Used</Text>
                 <Text style={s.paragraph}>
-                    Typical use cases include account authentication, feature personalization, billing state checks,
-                    and improving product quality through aggregate analytics.
+                    Your pet's conversation history is stored securely in Supabase and 
+                    is only accessible by you and anyone you invite as a co-parent.
                 </Text>
 
-                <Text style={s.heading}>Third-Party Services</Text>
                 <Text style={s.paragraph}>
-                    This starter may integrate with providers like authentication backends, subscription platforms,
-                    and analytics services. Review each provider's privacy policy before publishing.
-                </Text>
-
-                <Text style={s.heading}>Your Responsibility Before Launch</Text>
-                <Text style={s.paragraph}>
-                    Replace this document with your legal policy, verify regional compliance requirements,
-                    and keep your final policy URL available inside app settings.
+                    To delete your account and all associated data, email 
+                    chubuilds@gmail.com with the subject "Delete my account".
                 </Text>
             </ScrollView>
         </View>
